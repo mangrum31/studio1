@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Rocket, Star, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
@@ -12,10 +12,22 @@ import {
     MenubarTrigger,
 } from "@/components/ui/menubar"
 
-// Asteroid Icon
-const AsteroidIcon = ({ className }: { className?: string }) => (
+// Icons
+const BearIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-        <path d="M12.864 3.652c.632-.303 1.346.164 1.374.876l.248 6.42a.4.4 0 0 0 .54.392l5.48-2.51c.693-.317 1.4.244 1.25 1.01l-1.39 7.02a1 1 0 0 1-1.222.75l-6.17-1.742a.4.4 0 0 0-.44.44l1.743 6.17c.25.877-.52 1.647-1.398 1.398l-7.02-1.39c-.766-.15-1.327-.857-1.01-1.25l2.51-5.48a.4.4 0 0 0-.392-.54l-6.42-.248c-.712-.028-1.18-0.742-.876-1.374l3.65-7.56C8.2 3.96 8.96 3.5 9.78 3.5c1.292 0 2.585.15 3.084.152z" />
+        <path d="M16.5 10.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm-9 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm4.5 5.5c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+    </svg>
+);
+
+const HoneyPotIcon = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M20,8h-3.33C16.15,6.23,14.26,5,12,5S7.85,6.23,7.33,8H4C3.45,8,3,8.45,3,9v2c0,1.1,0.9,2,2,2h1v3.38 c-1.16,0.39-2,1.51-2,2.81V21h12v-2.81c0-1.3-0.84-2.42-2-2.81V13h1c1.1,0,2-0.9,2-2V9C21,8.45,20.55,8,20,8z M15,13v2.81 c-1.16,0.39-2,1.51-2,2.81V19h-2v-0.38c0-1.3-0.84-2.42-2-2.81V13h6V13z M12,7c1.1,0,2,0.9,2,2H10C10,7.9,10.9,7,12,7z" />
+    </svg>
+);
+
+const BeeIcon = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M13.25,10H16v1.5H13.5v2H16v1.5H13.5v2H16v1.5H13.25A3.25,3.25,0,0,1,10,19.75V18.5a1.75,1.75,0,0,0,1.75-1.75v-2a1.75,1.75,0,0,0-1.75-1.75V11.5A3.25,3.25,0,0,1,13.25,8.25V7H11.5V5.5H13v-2A1.5,1.5,0,0,1,14.5,2h1a1.5,1.5,0,0,1,1.5,1.5v2h1.5V7H17v1.25A3.25,3.25,0,0,1,13.25,10M3,11.5a2,2,0,0,0,2,2h3a2,2,0,0,0,2-2v-1a2,2,0,0,0-2-2H5a2,2,0,0,0-2,2v1z" />
     </svg>
 );
 
@@ -31,10 +43,10 @@ type Item = {
   id: number;
   x: number;
   y: number;
-  type: 'star' | 'asteroid';
+  type: 'honey' | 'bee';
 };
 
-export default function AstroCatchGame({ onBack }: { onBack: () => void }) {
+export default function HoneyBearGame({ onBack }: { onBack: () => void }) {
     const [gameState, setGameState] = useState<'start' | 'playing' | 'over'>('start');
     const [score, setScore] = useState(0);
     const [renderPlayerPos, setRenderPlayerPos] = useState({ x: 0, y: 0 });
@@ -104,7 +116,7 @@ export default function AstroCatchGame({ onBack }: { onBack: () => void }) {
                 id: Date.now() + Math.random(),
                 x: Math.random() * (dimensions.current.width - ITEM_SIZE),
                 y: -ITEM_SIZE,
-                type: Math.random() > 0.3 ? 'star' : 'asteroid',
+                type: Math.random() > 0.3 ? 'honey' : 'bee',
             });
             lastItemSpawn.current = Date.now();
         }
@@ -119,7 +131,7 @@ export default function AstroCatchGame({ onBack }: { onBack: () => void }) {
             const itemRect = { x: item.x, y: item.y, width: ITEM_SIZE, height: ITEM_SIZE };
 
             if (playerRect.x < itemRect.x + itemRect.width && playerRect.x + playerRect.width > itemRect.x && playerRect.y < itemRect.y + itemRect.height && playerRect.y + playerRect.height > itemRect.y) {
-                if (item.type === 'star') {
+                if (item.type === 'honey') {
                     setScore(s => s + 10);
                 } else {
                     isGameOver = true;
@@ -153,18 +165,18 @@ export default function AstroCatchGame({ onBack }: { onBack: () => void }) {
 
     return (
         <div className="relative w-full max-w-4xl aspect-[4/3] bg-background/50 rounded-lg shadow-2xl overflow-hidden border-2 border-border select-none" ref={gameAreaRef}>
-            <div className="absolute top-4 left-4 text-2xl font-headline text-primary z-10 drop-shadow-md">
+            <div className="absolute top-4 left-4 text-2xl font-headline text-accent z-10 drop-shadow-md">
                 Score: {score}
             </div>
-            <Button onClick={onBack} variant="ghost" size="icon" className="absolute top-2 right-2 z-30">
+             <Button onClick={onBack} variant="ghost" size="icon" className="absolute top-2 right-2 z-30">
                 <ArrowLeft />
             </Button>
 
             {gameState === 'start' && (
                 <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4 text-center">
-                    <h1 className="text-5xl md:text-7xl font-headline text-primary mb-4">Astro Catch</h1>
-                    <p className="text-lg text-foreground/80 mb-8">Use arrow keys to catch stars & avoid asteroids!</p>
-                    <Button onClick={startGame} size="lg" className="font-headline bg-primary text-primary-foreground hover:bg-primary/90">Start Game</Button>
+                    <h1 className="text-5xl md:text-7xl font-headline text-accent mb-4">Honey Bear</h1>
+                    <p className="text-lg text-foreground/80 mb-8">Use arrow keys to catch honey & avoid bees!</p>
+                    <Button onClick={startGame} size="lg" className="font-headline bg-accent text-accent-foreground hover:bg-accent/90">Start Game</Button>
                 </div>
             )}
             {gameState === 'over' && (
@@ -179,25 +191,25 @@ export default function AstroCatchGame({ onBack }: { onBack: () => void }) {
                         </MenubarMenu>
                     </Menubar>
                     <h1 className="text-5xl md:text-6xl font-headline text-destructive mb-4">Game Over</h1>
-                    <p className="text-2xl text-foreground mb-2">Final Score: <span className="text-primary font-bold">{score}</span></p>
-                    <Button onClick={startGame} size="lg" className="font-headline mt-6 bg-primary text-primary-foreground hover:bg-primary/90">Play Again</Button>
+                    <p className="text-2xl text-foreground mb-2">Final Score: <span className="text-accent font-bold">{score}</span></p>
+                    <Button onClick={startGame} size="lg" className="font-headline mt-6 bg-accent text-accent-foreground hover:bg-accent/90">Play Again</Button>
                 </div>
             )}
 
             <div
                 className="absolute text-foreground"
-                style={{ width: PLAYER_SIZE, height: PLAYER_SIZE, left: renderPlayerPos.x, top: renderPlayerPos.y }}
+                style={{ width: PLAYER_SIZE, height: PLAYER_SIZE, left: renderPlayerPos.x, top: renderPlayerPos.y, color: 'hsl(30 60% 50%)' }}
             >
-                <Rocket className="w-full h-full drop-shadow-[0_0_8px_hsl(var(--primary))]" />
+                <BearIcon className="w-full h-full drop-shadow-[0_0_8px_hsl(var(--primary))]" />
             </div>
             
             {renderItems.map(item => (
                 <div
                     key={item.id}
-                    className={cn("absolute", item.type === 'star' ? 'text-accent' : 'text-muted-foreground')}
+                    className={cn("absolute", item.type === 'honey' ? 'text-yellow-400' : 'text-slate-400')}
                     style={{ width: ITEM_SIZE, height: ITEM_SIZE, left: item.x, top: item.y }}
                 >
-                    {item.type === 'star' ? <Star fill="currentColor" className="w-full h-full drop-shadow-[0_0_8px_hsl(var(--accent))]" /> : <AsteroidIcon className="w-full h-full" />}
+                    {item.type === 'honey' ? <HoneyPotIcon className="w-full h-full drop-shadow-[0_0_8px_#facc15]" /> : <BeeIcon className="w-full h-full" />}
                 </div>
             ))}
         </div>
