@@ -112,8 +112,8 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
 
     const { player: playerConfig, items: itemConfigs, itemTypes, baseSpawnInterval, baseItemSpeed, goodItemChance } = gameConfig;
     
-    const spawnInterval = baseSpawnInterval / (1 + (difficulty - 1) / 20);
-    const itemSpeed = baseItemSpeed * (1 + (difficulty - 1) / 20);
+    const spawnInterval = baseSpawnInterval / (1 + (difficulty - 1) / 10);
+    const itemSpeed = baseItemSpeed * (1 + (difficulty - 1) / 10);
 
     const resetGame = useCallback(() => {
         if (!gameAreaRef.current) return;
