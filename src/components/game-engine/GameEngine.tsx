@@ -10,6 +10,8 @@ import {
     MenubarMenu,
     MenubarTrigger,
 } from "@/components/ui/menubar"
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 
 type ItemConfig = {
     type: string;
@@ -34,8 +36,8 @@ type GameConfig = {
         good: string;
         bad: string;
     };
-    spawnInterval: number;
-    itemSpeed: number;
+    baseSpawnInterval: number;
+    baseItemSpeed: number;
     goodItemChance: number;
     sounds: {
         catch: string;
@@ -57,7 +59,8 @@ type GameEngineProps = {
     title: string;
     instructions: string;
     theme?: 'primary' | 'accent';
-    children: (score: number) => React.ReactNode;
+    showDifficulty?: boolean;
+    children: (score: number, difficulty: number) => React.ReactNode;
 };
 
 const useGameSounds = (soundUrls: GameConfig['sounds']) => {
@@ -91,9 +94,10 @@ const useGameSounds = (soundUrls: GameConfig['sounds']) => {
     return playSound;
 };
 
-export default function GameEngine({ gameConfig, onBack, title, instructions, theme = 'primary', children }: GameEngineProps) {
+export default function GameEngine({ gameConfig, onBack, title, instructions, theme = 'primary', showDifficulty = false, children }: GameEngineProps) {
     const [gameState, setGameState] = useState<'start' | 'playing' | 'over'>('start');
     const [score, setScore] = useState(0);
+    const [difficulty, setDifficulty] = useState(50);
     const [renderPlayerPos, setRenderPlayerPos] = useState({ x: 0, y: 0 });
     const [renderItems, setRenderItems] = useState<Item[]>([]);
 
@@ -106,7 +110,10 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
     const gameAreaRef = useRef<HTMLDivElement>(null);
     const playSound = useGameSounds(gameConfig.sounds);
 
-    const { player: playerConfig, items: itemConfigs, itemTypes, spawnInterval, itemSpeed, goodItemChance } = gameConfig;
+    const { player: playerConfig, items: itemConfigs, itemTypes, baseSpawnInterval, baseItemSpeed, goodItemChance } = gameConfig;
+    
+    const spawnInterval = baseSpawnInterval / (1 + (difficulty - 1) / 20);
+    const itemSpeed = baseItemSpeed * (1 + (difficulty - 1) / 20);
 
     const resetGame = useCallback(() => {
         if (!gameAreaRef.current) return;
@@ -240,12 +247,25 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
 
     return (
         <div className="relative w-full max-w-4xl aspect-[4/3] bg-background/50 rounded-lg shadow-2xl overflow-hidden border-2 border-border select-none" ref={gameAreaRef}>
-            {children(score)}
+            {children(score, difficulty)}
 
             {gameState === 'start' && (
                 <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4 text-center">
                     <h1 className={cn("text-5xl md:text-7xl font-headline mb-4", theme === 'primary' ? 'text-primary' : 'text-accent')}>{title}</h1>
                     <p className="text-lg text-foreground/80 mb-8">{instructions}</p>
+                    {showDifficulty && (
+                         <div className="w-64 mb-8">
+                            <Label htmlFor="difficulty" className="text-foreground/80 mb-2 block">Difficulty: {difficulty}</Label>
+                            <Slider
+                                id="difficulty"
+                                min={1}
+                                max={100}
+                                step={1}
+                                value={[difficulty]}
+                                onValueChange={(value) => setDifficulty(value[0])}
+                            />
+                        </div>
+                    )}
                     <Button onClick={startGame} size="lg" className={cn("font-headline", theme === 'primary' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-accent text-accent-foreground hover:bg-accent/90')}>Start Game</Button>
                 </div>
             )}

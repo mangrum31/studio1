@@ -37,8 +37,8 @@ const gameConfig = {
         good: 'star',
         bad: 'asteroid'
     },
-    spawnInterval: 800,
-    itemSpeed: 4,
+    baseSpawnInterval: 1200,
+    baseItemSpeed: 2,
     goodItemChance: 0.7,
     sounds: {
         catch: 'https://cdn.pixabay.com/audio/2022/03/15/audio_5b36ba8059.mp3',
@@ -54,11 +54,13 @@ export default function AstroCatchGame({ onBack }: { onBack: () => void }) {
             onBack={onBack}
             title="Astro Catch"
             instructions="Use arrow keys to catch stars & avoid asteroids!"
+            showDifficulty
         >
-            {(score) => (
+            {(score, difficulty) => (
                 <>
-                    <div className="absolute top-4 left-4 text-2xl font-headline text-primary z-10 drop-shadow-md">
-                        Score: {score}
+                    <div className="absolute top-4 left-4 text-lg md:text-2xl font-headline text-primary z-10 drop-shadow-md flex items-center gap-4">
+                        <span>Score: {score}</span>
+                        <span>Level: {difficulty}</span>
                     </div>
                     <Button onClick={onBack} variant="ghost" size="icon" className="absolute top-2 right-2 z-30">
                         <ArrowLeft />
