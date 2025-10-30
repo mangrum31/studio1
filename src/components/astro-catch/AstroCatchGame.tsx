@@ -145,37 +145,37 @@ export default function AstroCatchGame() {
     }, [gameState, gameLoop]);
 
     return (
-        <div className="relative w-full max-w-4xl aspect-[4/3] bg-primary/20 rounded-lg shadow-2xl overflow-hidden border-2 border-primary select-none" ref={gameAreaRef}>
-            <div className="absolute top-4 left-4 text-2xl font-headline text-accent z-10 drop-shadow-md">
+        <div className="relative w-full max-w-4xl aspect-[4/3] bg-background/50 rounded-lg shadow-2xl overflow-hidden border-2 border-border select-none" ref={gameAreaRef}>
+            <div className="absolute top-4 left-4 text-2xl font-headline text-primary z-10 drop-shadow-md">
                 Score: {score}
             </div>
 
             {gameState === 'start' && (
                 <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4 text-center">
-                    <h1 className="text-5xl md:text-7xl font-headline text-accent mb-4">Astro Catch</h1>
-                    <p className="text-lg text-foreground mb-8">Use arrow keys to catch stars & avoid asteroids!</p>
-                    <Button onClick={startGame} size="lg" className="font-headline bg-accent text-accent-foreground hover:bg-accent/90">Start Game</Button>
+                    <h1 className="text-5xl md:text-7xl font-headline text-primary mb-4">Astro Catch</h1>
+                    <p className="text-lg text-foreground/80 mb-8">Use arrow keys to catch stars & avoid asteroids!</p>
+                    <Button onClick={startGame} size="lg" className="font-headline bg-primary text-primary-foreground hover:bg-primary/90">Start Game</Button>
                 </div>
             )}
             {gameState === 'over' && (
                 <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4 text-center">
                     <h1 className="text-5xl md:text-6xl font-headline text-destructive mb-4">Game Over</h1>
-                    <p className="text-2xl text-foreground mb-2">Final Score: <span className="text-accent font-bold">{score}</span></p>
-                    <Button onClick={startGame} size="lg" className="font-headline mt-6 bg-accent text-accent-foreground hover:bg-accent/90">Play Again</Button>
+                    <p className="text-2xl text-foreground mb-2">Final Score: <span className="text-primary font-bold">{score}</span></p>
+                    <Button onClick={startGame} size="lg" className="font-headline mt-6 bg-primary text-primary-foreground hover:bg-primary/90">Play Again</Button>
                 </div>
             )}
 
             <div
-                className="absolute text-gray-200"
+                className="absolute text-foreground"
                 style={{ width: PLAYER_SIZE, height: PLAYER_SIZE, left: renderPlayerPos.x, top: renderPlayerPos.y }}
             >
-                <Rocket className="w-full h-full drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
+                <Rocket className="w-full h-full drop-shadow-[0_0_8px_hsl(var(--primary))]" />
             </div>
             
             {renderItems.map(item => (
                 <div
                     key={item.id}
-                    className={cn("absolute", item.type === 'star' ? 'text-accent' : 'text-gray-400')}
+                    className={cn("absolute", item.type === 'star' ? 'text-accent' : 'text-muted-foreground')}
                     style={{ width: ITEM_SIZE, height: ITEM_SIZE, left: item.x, top: item.y }}
                 >
                     {item.type === 'star' ? <Star fill="currentColor" className="w-full h-full drop-shadow-[0_0_8px_hsl(var(--accent))]" /> : <AsteroidIcon className="w-full h-full" />}
