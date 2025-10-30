@@ -1,16 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React from 'react';
+import GameEngine from '@/components/game-engine/GameEngine';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import {
-    Menubar,
-    MenubarContent,
-    MenubarItem,
-    MenubarMenu,
-    MenubarTrigger,
-} from "@/components/ui/menubar"
 
 // Icons
 const BearIcon = ({ className }: { className?: string }) => (
@@ -31,187 +24,61 @@ const BeeIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-
-// Constants
-const PLAYER_SIZE = 60;
-const PLAYER_SPEED = 10;
-const ITEM_SIZE = 30;
-const ITEM_SPEED = 4;
-const ITEM_SPAWN_INTERVAL = 800;
-
-type Item = {
-  id: number;
-  x: number;
-  y: number;
-  type: 'honey' | 'bee';
+const gameConfig = {
+    player: {
+        component: BearIcon,
+        size: 60,
+        speed: 10,
+        className: "w-full h-full text-foreground drop-shadow-[0_0_8px_hsl(var(--primary))]",
+        style: { color: 'hsl(30 60% 50%)' }
+    },
+    items: [
+        {
+            type: 'honey',
+            component: HoneyPotIcon,
+            size: 30,
+            className: "w-full h-full text-yellow-400 drop-shadow-[0_0_8px_#facc15]"
+        },
+        {
+            type: 'bee',
+            component: BeeIcon,
+            size: 30,
+            className: "w-full h-full text-slate-400"
+        }
+    ],
+    itemTypes: {
+        good: 'honey',
+        bad: 'bee'
+    },
+    spawnInterval: 800,
+    itemSpeed: 4,
+    goodItemChance: 0.7,
+    sounds: {
+        catch: 'https://cdn.pixabay.com/audio/2022/03/15/audio_5b36ba8059.mp3',
+        gameOver: 'https://cdn.pixabay.com/audio/2022/03/10/audio_c8c82f5923.mp3',
+        start: 'https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c6686a.mp3',
+    }
 };
 
 export default function HoneyBearGame({ onBack }: { onBack: () => void }) {
-    const [gameState, setGameState] = useState<'start' | 'playing' | 'over'>('start');
-    const [score, setScore] = useState(0);
-    const [renderPlayerPos, setRenderPlayerPos] = useState({ x: 0, y: 0 });
-    const [renderItems, setRenderItems] = useState<Item[]>([]);
-
-    const playerPos = useRef({ x: 0, y: 0 });
-    const items = useRef<Item[]>([]);
-    const keysPressed = useRef<{ [key: string]: boolean }>({});
-    const dimensions = useRef({ width: 0, height: 0 });
-    const gameLoopRef = useRef<number>();
-    const lastItemSpawn = useRef<number>(0);
-    const gameAreaRef = useRef<HTMLDivElement>(null);
-
-    const resetGame = useCallback(() => {
-        if (!gameAreaRef.current) return;
-        const { width, height } = gameAreaRef.current.getBoundingClientRect();
-        dimensions.current = { width, height };
-
-        setScore(0);
-        const initialPlayerPos = { x: width / 2 - PLAYER_SIZE / 2, y: height - PLAYER_SIZE - 20 };
-        playerPos.current = initialPlayerPos;
-        items.current = [];
-
-        setRenderPlayerPos(initialPlayerPos);
-        setRenderItems([]);
-    }, []);
-
-    useEffect(() => {
-        const onResize = () => {
-            if (gameAreaRef.current) {
-                const { width, height } = gameAreaRef.current.getBoundingClientRect();
-                dimensions.current = { width, height };
-                if (gameState !== 'playing') {
-                   resetGame();
-                }
-            }
-        };
-        window.addEventListener('resize', onResize);
-        onResize();
-        return () => window.removeEventListener('resize', onResize);
-    }, [gameState, resetGame]);
-
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => { keysPressed.current[e.key] = true; };
-        const handleKeyUp = (e: KeyboardEvent) => { keysPressed.current[e.key] = false; };
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('keyup', handleKeyUp);
-        };
-    }, []);
-
-    const startGame = useCallback(() => {
-        resetGame();
-        setGameState('playing');
-    }, [resetGame]);
-
-    const gameLoop = useCallback(() => {
-        let newX = playerPos.current.x;
-        if (keysPressed.current['ArrowLeft'] || keysPressed.current['a']) { newX -= PLAYER_SPEED; }
-        if (keysPressed.current['ArrowRight'] || keysPressed.current['d']) { newX += PLAYER_SPEED; }
-        playerPos.current.x = Math.max(0, Math.min(dimensions.current.width - PLAYER_SIZE, newX));
-
-        if (Date.now() - lastItemSpawn.current > ITEM_SPAWN_INTERVAL) {
-            items.current.push({
-                id: Date.now() + Math.random(),
-                x: Math.random() * (dimensions.current.width - ITEM_SIZE),
-                y: -ITEM_SIZE,
-                type: Math.random() > 0.3 ? 'honey' : 'bee',
-            });
-            lastItemSpawn.current = Date.now();
-        }
-
-        const updatedItems: Item[] = [];
-        let isGameOver = false;
-
-        const playerRect = { ...playerPos.current, width: PLAYER_SIZE, height: PLAYER_SIZE };
-
-        for (const item of items.current) {
-            item.y += ITEM_SPEED;
-            const itemRect = { x: item.x, y: item.y, width: ITEM_SIZE, height: ITEM_SIZE };
-
-            if (playerRect.x < itemRect.x + itemRect.width && playerRect.x + playerRect.width > itemRect.x && playerRect.y < itemRect.y + itemRect.height && playerRect.y + playerRect.height > itemRect.y) {
-                if (item.type === 'honey') {
-                    setScore(s => s + 10);
-                } else {
-                    isGameOver = true;
-                    updatedItems.push(item);
-                }
-            } else if (item.y < dimensions.current.height) {
-                updatedItems.push(item);
-            }
-        }
-
-        items.current = updatedItems;
-        setRenderPlayerPos({ ...playerPos.current });
-        setRenderItems([...items.current]);
-        
-        if (isGameOver) {
-            setGameState('over');
-        } else {
-            gameLoopRef.current = requestAnimationFrame(gameLoop);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (gameState === 'playing') {
-            lastItemSpawn.current = Date.now();
-            gameLoopRef.current = requestAnimationFrame(gameLoop);
-        }
-        return () => {
-            if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
-        };
-    }, [gameState, gameLoop]);
-
     return (
-        <div className="relative w-full max-w-4xl aspect-[4/3] bg-background/50 rounded-lg shadow-2xl overflow-hidden border-2 border-border select-none" ref={gameAreaRef}>
-            <div className="absolute top-4 left-4 text-2xl font-headline text-accent z-10 drop-shadow-md">
-                Score: {score}
-            </div>
-             <Button onClick={onBack} variant="ghost" size="icon" className="absolute top-2 right-2 z-30">
-                <ArrowLeft />
-            </Button>
-
-            {gameState === 'start' && (
-                <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4 text-center">
-                    <h1 className="text-5xl md:text-7xl font-headline text-accent mb-4">Honey Bear</h1>
-                    <p className="text-lg text-foreground/80 mb-8">Use arrow keys to catch honey & avoid bees!</p>
-                    <Button onClick={startGame} size="lg" className="font-headline bg-accent text-accent-foreground hover:bg-accent/90">Start Game</Button>
-                </div>
+        <GameEngine
+            gameConfig={gameConfig}
+            onBack={onBack}
+            title="Honey Bear"
+            instructions="Use arrow keys to catch honey & avoid bees!"
+            theme="accent"
+        >
+            {(score) => (
+                <>
+                    <div className="absolute top-4 left-4 text-2xl font-headline text-accent z-10 drop-shadow-md">
+                        Score: {score}
+                    </div>
+                    <Button onClick={onBack} variant="ghost" size="icon" className="absolute top-2 right-2 z-30">
+                        <ArrowLeft />
+                    </Button>
+                </>
             )}
-            {gameState === 'over' && (
-                <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4 text-center">
-                    <Menubar className="absolute top-4 right-4 bg-transparent border-none">
-                        <MenubarMenu>
-                            <MenubarTrigger>Menu</MenubarTrigger>
-                            <MenubarContent>
-                                <MenubarItem onClick={onBack}>Home</MenubarItem>
-                                <MenubarItem onClick={() => { setGameState('start'); resetGame(); }}>Quit</MenubarItem>
-                            </MenubarContent>
-                        </MenubarMenu>
-                    </Menubar>
-                    <h1 className="text-5xl md:text-6xl font-headline text-destructive mb-4">Game Over</h1>
-                    <p className="text-2xl text-foreground mb-2">Final Score: <span className="text-accent font-bold">{score}</span></p>
-                    <Button onClick={startGame} size="lg" className="font-headline mt-6 bg-accent text-accent-foreground hover:bg-accent/90">Play Again</Button>
-                </div>
-            )}
-
-            <div
-                className="absolute text-foreground"
-                style={{ width: PLAYER_SIZE, height: PLAYER_SIZE, left: renderPlayerPos.x, top: renderPlayerPos.y, color: 'hsl(30 60% 50%)' }}
-            >
-                <BearIcon className="w-full h-full drop-shadow-[0_0_8px_hsl(var(--primary))]" />
-            </div>
-            
-            {renderItems.map(item => (
-                <div
-                    key={item.id}
-                    className={cn("absolute", item.type === 'honey' ? 'text-yellow-400' : 'text-slate-400')}
-                    style={{ width: ITEM_SIZE, height: ITEM_SIZE, left: item.x, top: item.y }}
-                >
-                    {item.type === 'honey' ? <HoneyPotIcon className="w-full h-full drop-shadow-[0_0_8px_#facc15]" /> : <BeeIcon className="w-full h-full" />}
-                </div>
-            ))}
-        </div>
+        </GameEngine>
     );
 }
