@@ -4,6 +4,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Rocket, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+    Menubar,
+    MenubarContent,
+    MenubarItem,
+    MenubarMenu,
+    MenubarTrigger,
+} from "@/components/ui/menubar"
 
 // Asteroid Icon
 const AsteroidIcon = ({ className }: { className?: string }) => (
@@ -159,6 +166,15 @@ export default function AstroCatchGame() {
             )}
             {gameState === 'over' && (
                 <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4 text-center">
+                    <Menubar className="absolute top-4 right-4 bg-transparent border-none">
+                        <MenubarMenu>
+                            <MenubarTrigger>Menu</MenubarTrigger>
+                            <MenubarContent>
+                                <MenubarItem onClick={startGame}>Home</MenubarItem>
+                                <MenubarItem onClick={startGame}>Quit</MenubarItem>
+                            </MenubarContent>
+                        </MenubarMenu>
+                    </Menubar>
                     <h1 className="text-5xl md:text-6xl font-headline text-destructive mb-4">Game Over</h1>
                     <p className="text-2xl text-foreground mb-2">Final Score: <span className="text-primary font-bold">{score}</span></p>
                     <Button onClick={startGame} size="lg" className="font-headline mt-6 bg-primary text-primary-foreground hover:bg-primary/90">Play Again</Button>
