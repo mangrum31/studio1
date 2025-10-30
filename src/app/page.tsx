@@ -23,14 +23,14 @@ export default function Home() {
           <div className="flex flex-col items-center justify-center text-center">
             <h1 className="text-6xl font-headline text-primary mb-8">Select a Game</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card className="bg-card/70 hover:bg-card transition-colors cursor-pointer" onClick={() => setSelectedGame('astro-catch')}>
+              <Card className="bg-card/70 hover:bg-card transition-all duration-200 cursor-pointer transform hover:scale-105" onClick={() => setSelectedGame('astro-catch')}>
                 <CardContent className="p-6 flex flex-col items-center justify-center">
                   <Rocket className="w-20 h-20 text-primary mb-4" />
                   <h2 className="text-3xl font-headline text-primary">Astro Catch</h2>
                   <p className="text-foreground/80 mt-2">Catch stars, avoid asteroids!</p>
                 </CardContent>
               </Card>
-              <Card className="bg-card/70 hover:bg-card transition-colors cursor-pointer" onClick={() => setSelectedGame('honey-bear')}>
+              <Card className="bg-card/70 hover:bg-card transition-all duration-200 cursor-pointer transform hover:scale-105" onClick={() => setSelectedGame('honey-bear')}>
                 <CardContent className="p-6 flex flex-col items-center justify-center">
                   <PawPrint className="w-20 h-20 text-accent mb-4" />
                   <h2 className="text-3xl font-headline text-accent">Honey Bear</h2>
