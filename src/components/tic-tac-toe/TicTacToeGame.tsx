@@ -59,6 +59,7 @@ const TicTacToeGame = ({ onBack }: { onBack: () => void }) => {
     const value = board[index];
     return (
       <Button
+        key={index}
         variant="outline"
         className="w-24 h-24 md:w-32 md:h-32 text-4xl md:text-6xl flex items-center justify-center bg-card hover:bg-card/80"
         onClick={() => handleClick(index)}
