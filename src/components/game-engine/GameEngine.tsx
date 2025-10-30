@@ -69,6 +69,7 @@ const useGameSounds = (soundUrls: GameConfig['sounds']) => {
     useEffect(() => {
         Object.entries(soundUrls).forEach(([name, url]) => {
             const audio = new Audio(url);
+            audio.preload = 'auto';
             audio.load();
             sounds.current[name] = audio;
         });
@@ -87,7 +88,10 @@ const useGameSounds = (soundUrls: GameConfig['sounds']) => {
         const sound = sounds.current[name];
         if (sound) {
             sound.currentTime = 0;
-            sound.play().catch(error => console.error(`Error playing sound ${name}:`, error));
+            const playPromise = sound.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => console.error(`Error playing sound ${name}:`, error));
+            }
         }
     }, []);
 
@@ -112,8 +116,8 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
 
     const { player: playerConfig, items: itemConfigs, itemTypes, baseSpawnInterval, baseItemSpeed, goodItemChance } = gameConfig;
     
-    const spawnInterval = baseSpawnInterval / (1 + (difficulty - 1) / 10);
-    const itemSpeed = baseItemSpeed * (1 + (difficulty - 1) / 10);
+    const spawnInterval = baseSpawnInterval / (1 + (difficulty - 1) / 5);
+    const itemSpeed = baseItemSpeed * (1 + (difficulty - 1) / 5);
 
     const resetGame = useCallback(() => {
         if (!gameAreaRef.current) return;
