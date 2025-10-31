@@ -250,15 +250,15 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
     const PlayerComponent = playerConfig.component;
 
     return (
-        <div className="relative w-full max-w-4xl aspect-[4/3] bg-background/50 rounded-lg shadow-2xl overflow-hidden border-2 border-border select-none" ref={gameAreaRef}>
+        <div className="relative w-full h-full max-w-4xl aspect-video bg-background/50 rounded-lg shadow-2xl overflow-hidden border-2 border-border select-none" ref={gameAreaRef}>
             {children(score, difficulty)}
 
             {gameState === 'start' && (
                 <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4 text-center">
-                    <h1 className={cn("text-5xl md:text-7xl font-headline mb-4", theme === 'primary' ? 'text-primary' : 'text-accent')}>{title}</h1>
-                    <p className="text-lg text-foreground/80 mb-8">{instructions}</p>
+                    <h1 className={cn("text-4xl md:text-7xl font-headline mb-4", theme === 'primary' ? 'text-primary' : 'text-accent')}>{title}</h1>
+                    <p className="text-base md:text-lg text-foreground/80 mb-8">{instructions}</p>
                     {showDifficulty && (
-                         <div className="w-64 mb-8">
+                         <div className="w-52 md:w-64 mb-8">
                             <Label htmlFor="difficulty" className="text-foreground/80 mb-2 block">Difficulty: {difficulty}</Label>
                             <Slider
                                 id="difficulty"
@@ -284,8 +284,8 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
                             </MenubarContent>
                         </MenubarMenu>
                     </Menubar>
-                    <h1 className="text-5xl md:text-6xl font-headline text-destructive mb-4">Game Over</h1>
-                    <p className="text-2xl text-foreground mb-2">Final Score: <span className={cn("font-bold", theme === 'primary' ? 'text-primary' : 'text-accent')}>{score}</span></p>
+                    <h1 className="text-4xl md:text-6xl font-headline text-destructive mb-4">Game Over</h1>
+                    <p className="text-xl md:text-2xl text-foreground mb-2">Final Score: <span className={cn("font-bold", theme === 'primary' ? 'text-primary' : 'text-accent')}>{score}</span></p>
                     <Button onClick={startGame} size="lg" className={cn("font-headline mt-6", theme === 'primary' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-accent text-accent-foreground hover:bg-accent/90')}>Play Again</Button>
                 </div>
             )}

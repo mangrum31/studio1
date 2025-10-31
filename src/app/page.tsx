@@ -23,27 +23,27 @@ export default function Home() {
       default:
         return (
           <div className="flex flex-col items-center justify-center text-center">
-            <h1 className="text-6xl font-headline text-primary mb-8">Select a Game</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <h1 className="text-4xl md:text-6xl font-headline text-primary mb-8">Select a Game</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               <Card className="bg-card/70 hover:bg-card transition-all duration-200 cursor-pointer transform hover:scale-105" onClick={() => setSelectedGame('astro-catch')}>
                 <CardContent className="p-6 flex flex-col items-center justify-center h-full">
-                  <Rocket className="w-20 h-20 text-primary mb-4" />
-                  <h2 className="text-3xl font-headline text-primary">Astro Catch</h2>
-                  <p className="text-foreground/80 mt-2">Catch stars, avoid asteroids!</p>
+                  <Rocket className="w-16 h-16 md:w-20 md:h-20 text-primary mb-4" />
+                  <h2 className="text-2xl md:text-3xl font-headline text-primary">Astro Catch</h2>
+                  <p className="text-foreground/80 mt-2 text-sm md:text-base">Catch stars, avoid asteroids!</p>
                 </CardContent>
               </Card>
               <Card className="bg-card/70 hover:bg-card transition-all duration-200 cursor-pointer transform hover:scale-105" onClick={() => setSelectedGame('honey-bear')}>
                 <CardContent className="p-6 flex flex-col items-center justify-center h-full">
-                  <PawPrint className="w-20 h-20 text-accent mb-4" />
-                  <h2 className="text-3xl font-headline text-accent">Honey Bear</h2>
-                  <p className="text-foreground/80 mt-2">Catch honey, avoid bees!</p>
+                  <PawPrint className="w-16 h-16 md:w-20 md:h-20 text-accent mb-4" />
+                  <h2 className="text-2xl md:text-3xl font-headline text-accent">Honey Bear</h2>
+                  <p className="text-foreground/80 mt-2 text-sm md:text-base">Catch honey, avoid bees!</p>
                 </CardContent>
               </Card>
               <Card className="bg-card/70 hover:bg-card transition-all duration-200 cursor-pointer transform hover:scale-105" onClick={() => setSelectedGame('tic-tac-toe')}>
                 <CardContent className="p-6 flex flex-col items-center justify-center h-full">
-                  <Swords className="w-20 h-20 text-destructive mb-4" />
-                  <h2 className="text-3xl font-headline text-destructive">Tic Tac Toe</h2>
-                  <p className="text-foreground/80 mt-2">A classic game of X's and O's.</p>
+                  <Swords className="w-16 h-16 md:w-20 md:h-20 text-destructive mb-4" />
+                  <h2 className="text-2xl md:text-3xl font-headline text-destructive">Tic Tac Toe</h2>
+                  <p className="text-foreground/80 mt-2 text-sm md:text-base">A classic game of X's and O's.</p>
                 </CardContent>
               </Card>
             </div>
@@ -53,7 +53,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center p-4 md:p-8">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center p-4">
       {renderGame()}
     </main>
   );
