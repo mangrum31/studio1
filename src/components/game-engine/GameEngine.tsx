@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/menubar"
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import { Switch } from '../ui/switch';
 
 type ItemConfig = {
     type: string;
@@ -68,10 +69,12 @@ const useGameSounds = (soundUrls: GameConfig['sounds']) => {
 
     useEffect(() => {
         Object.entries(soundUrls).forEach(([name, url]) => {
-            const audio = new Audio(url);
-            audio.preload = 'auto';
-            audio.load();
-            sounds.current[name] = audio;
+            if (sounds.current[name]?.src !== url) {
+                const audio = new Audio(url);
+                audio.preload = 'auto';
+                audio.load();
+                sounds.current[name] = audio;
+            }
         });
 
         return () => {
@@ -102,6 +105,7 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
     const [gameState, setGameState] = useState<'start' | 'playing' | 'over'>('start');
     const [score, setScore] = useState(0);
     const [difficulty, setDifficulty] = useState(50);
+    const [isAutopilot, setIsAutopilot] = useState(false);
     const [renderPlayerPos, setRenderPlayerPos] = useState({ x: 0, y: 0 });
     const [renderItems, setRenderItems] = useState<Item[]>([]);
 
@@ -116,8 +120,8 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
 
     const { player: playerConfig, items: itemConfigs, itemTypes, baseSpawnInterval, baseItemSpeed, goodItemChance } = gameConfig;
     
-    const spawnInterval = baseSpawnInterval / (1 + (difficulty - 1) / 5);
-    const itemSpeed = baseItemSpeed * (1 + (difficulty - 1) / 5);
+    const spawnInterval = baseSpawnInterval / (1 + (difficulty - 1) * (difficulty - 1) / 250);
+    const itemSpeed = baseItemSpeed * (1 + (difficulty - 1) * (difficulty - 1) / 250);
 
     const resetGame = useCallback(() => {
         if (!gameAreaRef.current) return;
@@ -165,10 +169,81 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
         playSound('start');
     }, [resetGame, playSound]);
 
+    const autopilotAI = useCallback(() => {
+        const playerCenter = playerPos.current.x + playerConfig.size / 2;
+        const goodItems = items.current.filter(item => item.type === itemTypes.good);
+        const badItems = items.current.filter(item => item.type === itemTypes.bad);
+
+        let targetX: number | null = null;
+
+        if (goodItems.length > 0) {
+            goodItems.sort((a, b) => a.y - b.y);
+            let bestTarget = goodItems[0];
+            
+            // Very simple prediction of where the item will land
+            const timeToReachBottom = (dimensions.current.height - bestTarget.y) / itemSpeed;
+            
+            // Check for potential collisions with bad items
+            let safePath = true;
+            for (const badItem of badItems) {
+                const badItemCenter = badItem.x + itemConfigs.find(c=>c.type === badItem.type)!.size / 2;
+                const dist = Math.abs(badItemCenter - (bestTarget.x + itemConfigs.find(c=>c.type === bestTarget.type)!.size / 2));
+                const yDist = Math.abs(badItem.y - bestTarget.y);
+
+                if (dist < playerConfig.size && badItem.y > bestTarget.y && yDist < 100) {
+                   safePath = false;
+                   break;
+                }
+            }
+            if(safePath) {
+                targetX = bestTarget.x + itemConfigs.find(c => c.type === bestTarget.type)!.size / 2;
+            }
+        }
+        
+        // Avoid bad items above all else
+        for (const badItem of badItems) {
+            const badItemCenter = badItem.x + itemConfigs.find(c=>c.type === badItem.type)!.size / 2;
+            const yDist = dimensions.current.height - playerConfig.size - badItem.y;
+            const xDist = Math.abs(badItemCenter - playerCenter);
+
+            if (yDist < 150 && yDist > 0 && xDist < playerConfig.size * 1.5) {
+                if (badItemCenter > playerCenter) { // move left
+                    targetX = playerPos.current.x - playerConfig.size;
+                } else { // move right
+                    targetX = playerPos.current.x + playerConfig.size;
+                }
+                break;
+            }
+        }
+
+
+        if (targetX !== null) {
+            if (targetX > playerCenter) {
+                return 'right';
+            } else if (targetX < playerCenter) {
+                return 'left';
+            }
+        }
+        return null;
+
+    }, [playerConfig.size, itemTypes.good, itemSpeed, itemConfigs]);
+
+
     const gameLoop = useCallback(() => {
         let newX = playerPos.current.x;
-        if (keysPressed.current['ArrowLeft'] || keysPressed.current['a']) { newX -= playerConfig.speed; }
-        if (keysPressed.current['ArrowRight'] || keysPressed.current['d']) { newX += playerConfig.speed; }
+
+        if (isAutopilot) {
+            const move = autopilotAI();
+            if (move === 'left') {
+                newX -= playerConfig.speed;
+            } else if (move === 'right') {
+                newX += playerConfig.speed;
+            }
+        } else {
+            if (keysPressed.current['ArrowLeft'] || keysPressed.current['a']) { newX -= playerConfig.speed; }
+            if (keysPressed.current['ArrowRight'] || keysPressed.current['d']) { newX += playerConfig.speed; }
+        }
+        
         playerPos.current.x = Math.max(0, Math.min(dimensions.current.width - playerConfig.size, newX));
 
         if (Date.now() - lastItemSpawn.current > spawnInterval) {
@@ -220,7 +295,7 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
         } else {
             gameLoopRef.current = requestAnimationFrame(gameLoop);
         }
-    }, [playerConfig, itemConfigs, itemTypes, spawnInterval, itemSpeed, goodItemChance, playSound]);
+    }, [playerConfig, itemConfigs, itemTypes, spawnInterval, itemSpeed, goodItemChance, playSound, isAutopilot, autopilotAI]);
 
     useEffect(() => {
         if (gameState === 'playing') {
@@ -258,7 +333,7 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
                     <h1 className={cn("text-4xl md:text-7xl font-headline mb-4", theme === 'primary' ? 'text-primary' : 'text-accent')}>{title}</h1>
                     <p className="text-base md:text-lg text-foreground/80 mb-8">{instructions}</p>
                     {showDifficulty && (
-                         <div className="w-52 md:w-64 mb-8">
+                         <div className="w-52 md:w-64 mb-6">
                             <Label htmlFor="difficulty" className="text-foreground/80 mb-2 block">Difficulty: {difficulty}</Label>
                             <Slider
                                 id="difficulty"
@@ -270,6 +345,10 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
                             />
                         </div>
                     )}
+                     <div className="flex items-center space-x-2 mb-8">
+                        <Switch id="autopilot-mode" checked={isAutopilot} onCheckedChange={setIsAutopilot} />
+                        <Label htmlFor="autopilot-mode">Autopilot AI</Label>
+                    </div>
                     <Button onClick={startGame} size="lg" className={cn("font-headline", theme === 'primary' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-accent text-accent-foreground hover:bg-accent/90')}>Start Game</Button>
                 </div>
             )}
