@@ -30,7 +30,7 @@ const checkWinner = (board: Square[]): Player | null => {
 };
 
 const minimax = (newBoard: Square[], player: Player, level: number, human: Player, computer: Player): { score: number, index?: number } => {
-  const availableSpots = newBoard.map((s, i) => s === null ? i : null).filter(s => s !== null);
+  const availableSpots = newBoard.map((s, i) => s === null ? i : null).filter(s => s !== null) as number[];
   
   const winner = checkWinner(newBoard);
   if (winner === human) {
@@ -43,15 +43,14 @@ const minimax = (newBoard: Square[], player: Player, level: number, human: Playe
 
   // AI makes a mistake based on level. At level 100, it's perfect.
   if (Math.random() > level / 100) {
-    const randomIndex = availableSpots[Math.floor(Math.random() * availableSpots.length)] as number;
+    const randomIndex = availableSpots[Math.floor(Math.random() * availableSpots.length)];
     return { score: 0, index: randomIndex };
   }
 
   const moves: { score: number, index: number }[] = [];
   for (const spot of availableSpots) {
-    if (spot === null) continue;
-    const move = { index: spot as number, score: 0 };
-    newBoard[spot as number] = player;
+    const move = { index: spot, score: 0 };
+    newBoard[spot] = player;
 
     if (player === computer) {
       const result = minimax(newBoard, human, level, human, computer);
@@ -61,11 +60,11 @@ const minimax = (newBoard: Square[], player: Player, level: number, human: Playe
       move.score = result.score;
     }
     
-    newBoard[spot as number] = null;
+    newBoard[spot] = null;
     moves.push(move);
   }
 
-  let bestMove: { score: number, index: number } = moves[0];
+  let bestMove: { score: number, index: number } | undefined;
   if (player === computer) {
     let bestScore = -10000;
     for (let i = 0; i < moves.length; i++) {
@@ -83,7 +82,7 @@ const minimax = (newBoard: Square[], player: Player, level: number, human: Playe
       }
     }
   }
-  return bestMove;
+  return bestMove!;
 };
 
 
