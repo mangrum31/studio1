@@ -120,8 +120,9 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
 
     const { player: playerConfig, items: itemConfigs, itemTypes, baseSpawnInterval, baseItemSpeed, goodItemChance } = gameConfig;
     
-    const spawnInterval = baseSpawnInterval / (1 + (difficulty - 1) * (difficulty - 1) / 250);
-    const itemSpeed = baseItemSpeed * (1 + (difficulty - 1) * (difficulty - 1) / 250);
+    const spawnInterval = baseSpawnInterval / (1 + (difficulty / 100) * 4);
+    const itemSpeed = baseItemSpeed * (1 + (difficulty / 100) * 4);
+
 
     const resetGame = useCallback(() => {
         if (!gameAreaRef.current) return;
@@ -158,7 +159,7 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
         return () => {
-            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keydown', handleKeyUp);
             window.removeEventListener('keyup', handleKeyUp);
         };
     }, []);
@@ -173,60 +174,75 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
         const playerCenter = playerPos.current.x + playerConfig.size / 2;
         const goodItems = items.current.filter(item => item.type === itemTypes.good);
         const badItems = items.current.filter(item => item.type === itemTypes.bad);
-
+    
         let targetX: number | null = null;
-
-        if (goodItems.length > 0) {
-            goodItems.sort((a, b) => a.y - b.y);
+    
+        // Higher difficulty makes the AI more perfect
+        const mistakeChance = (100 - difficulty) / 100;
+        if (Math.random() < mistakeChance) {
+          // Make a random move
+          const moves = ['left', 'right', 'none'];
+          const randomMove = moves[Math.floor(Math.random() * moves.length)];
+          if (randomMove === 'left') return 'left';
+          if (randomMove === 'right') return 'right';
+          return null;
+        }
+    
+        // Defensive play: avoid bad items
+        for (const badItem of badItems) {
+            const badItemCenter = badItem.x + itemConfigs.find(c => c.type === badItem.type)!.size / 2;
+            const yDist = dimensions.current.height - playerConfig.size - badItem.y;
+            const xDist = Math.abs(badItemCenter - playerCenter);
+    
+            if (yDist < 200 && yDist > 0 && xDist < playerConfig.size * 1.5) {
+                // Dodge
+                if (badItemCenter > playerCenter) {
+                    targetX = playerPos.current.x - playerConfig.size * 1.5;
+                } else {
+                    targetX = playerPos.current.x + playerConfig.size * 1.5;
+                }
+                break; // Prioritize dodging this one
+            }
+        }
+    
+        // Offensive play: go for the nearest good item if no immediate danger
+        if (targetX === null && goodItems.length > 0) {
+            goodItems.sort((a, b) => {
+                const aDist = Math.abs(a.x - playerCenter) + (dimensions.current.height - a.y);
+                const bDist = Math.abs(b.x - playerCenter) + (dimensions.current.height - b.y);
+                return aDist - bDist;
+            });
             let bestTarget = goodItems[0];
-            
-            // Very simple prediction of where the item will land
-            const timeToReachBottom = (dimensions.current.height - bestTarget.y) / itemSpeed;
-            
-            // Check for potential collisions with bad items
-            let safePath = true;
+    
+            // Check if path to target is clear
+            let isPathClear = true;
             for (const badItem of badItems) {
-                const badItemCenter = badItem.x + itemConfigs.find(c=>c.type === badItem.type)!.size / 2;
-                const dist = Math.abs(badItemCenter - (bestTarget.x + itemConfigs.find(c=>c.type === bestTarget.type)!.size / 2));
-                const yDist = Math.abs(badItem.y - bestTarget.y);
-
-                if (dist < playerConfig.size && badItem.y > bestTarget.y && yDist < 100) {
-                   safePath = false;
-                   break;
+                const badItemCenter = badItem.x + itemConfigs.find(c => c.type === badItem.type)!.size / 2;
+                const targetCenter = bestTarget.x + itemConfigs.find(c => c.type === bestTarget.type)!.size / 2;
+    
+                // Is bad item between player and target?
+                const isHorizontallyBetween = (badItemCenter > playerCenter && badItemCenter < targetCenter) || (badItemCenter < playerCenter && badItemCenter > targetCenter);
+                if (isHorizontallyBetween && badItem.y > bestTarget.y && badItem.y < playerPos.current.y) {
+                    isPathClear = false;
+                    break;
                 }
             }
-            if(safePath) {
+    
+            if (isPathClear) {
                 targetX = bestTarget.x + itemConfigs.find(c => c.type === bestTarget.type)!.size / 2;
             }
         }
-        
-        // Avoid bad items above all else
-        for (const badItem of badItems) {
-            const badItemCenter = badItem.x + itemConfigs.find(c=>c.type === badItem.type)!.size / 2;
-            const yDist = dimensions.current.height - playerConfig.size - badItem.y;
-            const xDist = Math.abs(badItemCenter - playerCenter);
-
-            if (yDist < 150 && yDist > 0 && xDist < playerConfig.size * 1.5) {
-                if (badItemCenter > playerCenter) { // move left
-                    targetX = playerPos.current.x - playerConfig.size;
-                } else { // move right
-                    targetX = playerPos.current.x + playerConfig.size;
-                }
-                break;
-            }
-        }
-
-
+    
         if (targetX !== null) {
-            if (targetX > playerCenter) {
+            if (targetX > playerCenter + playerConfig.speed) {
                 return 'right';
-            } else if (targetX < playerCenter) {
+            } else if (targetX < playerCenter - playerConfig.speed) {
                 return 'left';
             }
         }
+    
         return null;
-
-    }, [playerConfig.size, itemTypes.good, itemSpeed, itemConfigs]);
+    }, [playerConfig.size, playerConfig.speed, itemTypes.good, itemTypes.bad, itemSpeed, itemConfigs, difficulty]);
 
 
     const gameLoop = useCallback(() => {
@@ -326,7 +342,7 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
 
     return (
         <div className="relative w-full h-full max-w-4xl aspect-video bg-background/50 rounded-lg shadow-2xl overflow-hidden border-2 border-border select-none" ref={gameAreaRef}>
-            {children(score, difficulty)}
+            {children(score, Math.floor(difficulty / 10) + 1)}
 
             {gameState === 'start' && (
                 <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4 text-center">
@@ -380,3 +396,5 @@ export default function GameEngine({ gameConfig, onBack, title, instructions, th
         </div>
     );
 }
+
+    

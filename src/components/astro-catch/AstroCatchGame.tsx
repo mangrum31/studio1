@@ -56,11 +56,11 @@ export default function AstroCatchGame({ onBack }: { onBack: () => void }) {
             instructions="Use arrow keys to catch stars & avoid asteroids!"
             showDifficulty
         >
-            {(score, difficulty) => (
+            {(score, level) => (
                 <>
                     <div className="absolute top-4 left-4 text-lg md:text-2xl font-headline text-primary z-10 drop-shadow-md flex items-center gap-4">
                         <span>Score: {score}</span>
-                        <span>Level: {difficulty}</span>
+                        <span>Level: {level}</span>
                     </div>
                     <Button onClick={onBack} variant="ghost" size="icon" className="absolute top-2 right-2 z-30">
                         <ArrowLeft />
@@ -70,3 +70,5 @@ export default function AstroCatchGame({ onBack }: { onBack: () => void }) {
         </GameEngine>
     );
 }
+
+    

@@ -41,7 +41,7 @@ const minimax = (newBoard: Square[], player: Player, level: number, human: Playe
     return { score: 0 };
   }
 
-  // AI makes a mistake based on level
+  // AI makes a mistake based on level. At level 100, it's perfect.
   if (Math.random() > level / 100) {
     const randomIndex = availableSpots[Math.floor(Math.random() * availableSpots.length)] as number;
     return { score: 0, index: randomIndex };
@@ -49,6 +49,7 @@ const minimax = (newBoard: Square[], player: Player, level: number, human: Playe
 
   const moves: { score: number, index: number }[] = [];
   for (const spot of availableSpots) {
+    if (spot === null) continue;
     const move = { index: spot as number, score: 0 };
     newBoard[spot as number] = player;
 
@@ -64,7 +65,7 @@ const minimax = (newBoard: Square[], player: Player, level: number, human: Playe
     moves.push(move);
   }
 
-  let bestMove: { score: number, index: number };
+  let bestMove: { score: number, index: number } = moves[0];
   if (player === computer) {
     let bestScore = -10000;
     for (let i = 0; i < moves.length; i++) {
@@ -82,7 +83,7 @@ const minimax = (newBoard: Square[], player: Player, level: number, human: Playe
       }
     }
   }
-  return bestMove!;
+  return bestMove;
 };
 
 
@@ -115,13 +116,23 @@ const TicTacToeGame = ({ onBack }: { onBack: () => void }) => {
     if (winner || currentBoard.every(s => s !== null)) return;
     
     const opponent = player === 'X' ? 'O' : 'X';
-    const bestMove = minimax(currentBoard, player, level, opponent, player);
+    const bestMove = minimax([...currentBoard], player, level, opponent, player);
     
-    if (bestMove.index !== undefined) {
+    if (bestMove && bestMove.index !== undefined) {
       const newBoard = [...currentBoard];
       newBoard[bestMove.index] = player;
       setBoard(newBoard);
       setCurrentPlayer(opponent);
+    } else {
+        // If minimax fails (e.g., all moves have same score due to randomness), pick a random available spot
+        const availableSpots = currentBoard.map((s, i) => s === null ? i : null).filter(s => s !== null);
+        if (availableSpots.length > 0) {
+            const randomIndex = availableSpots[Math.floor(Math.random() * availableSpots.length)] as number;
+            const newBoard = [...currentBoard];
+            newBoard[randomIndex] = player;
+            setBoard(newBoard);
+            setCurrentPlayer(opponent);
+        }
     }
   }, [winner]);
 
@@ -144,7 +155,7 @@ const TicTacToeGame = ({ onBack }: { onBack: () => void }) => {
         }, 500);
         return () => clearTimeout(timeoutId);
     }
-  }, [board, gameMode, currentPlayer, computerPlayer, computerMove, difficulty, difficultyAI2]);
+  }, [board, gameMode, currentPlayer, computerPlayer, computerMove, difficulty, difficultyAI2, winner]);
 
   const handleClick = (index: number) => {
     if (winner || board[index] || (gameMode !== 'player' && currentPlayer !== humanPlayer) || gameState !== 'playing') return;
@@ -276,7 +287,7 @@ const TicTacToeGame = ({ onBack }: { onBack: () => void }) => {
                 <RotateCcw />
                 <span className="sr-only">Reset Game</span>
             </Button>
-            <Button onClick={() => setGameState('start')} variant="ghost" size="icon" title="Back to Settings">
+            <Button onClick={() => { resetGame(); setGameState('start'); }} variant="ghost" size="icon" title="Back to Settings">
                 <ArrowLeft />
                 <span className="sr-only">Back</span>
             </Button>
@@ -300,3 +311,5 @@ const TicTacToeGame = ({ onBack }: { onBack: () => void }) => {
 };
 
 export default TicTacToeGame;
+
+    
