@@ -151,12 +151,12 @@ const TicTacToeGame = ({ onBack }: { onBack: () => void }) => {
       <Button
         key={index}
         variant="outline"
-        className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 text-4xl md:text-6xl flex items-center justify-center bg-card hover:bg-card/80 disabled:opacity-100 disabled:cursor-not-allowed"
+        className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 text-4xl md:text-6xl flex items-center justify-center bg-card hover:bg-card/80 disabled:opacity-100 disabled:cursor-not-allowed"
         onClick={() => handleClick(index)}
         disabled={!!value || !!winner}
       >
-        {value === 'X' && <X className="w-12 h-12 md:w-16 md:h-16 text-primary" />}
-        {value === 'O' && <Circle className="w-12 h-12 md:w-16 md:h-16 text-accent" />}
+        {value === 'X' && <X className="w-10 h-10 md:w-16 md:h-16 text-primary" />}
+        {value === 'O' && <Circle className="w-10 h-10 md:w-16 md:h-16 text-accent" />}
       </Button>
     );
   };
@@ -172,7 +172,7 @@ const TicTacToeGame = ({ onBack }: { onBack: () => void }) => {
 
   if (gameState === 'start') {
     return (
-        <div className="flex flex-col items-center justify-center text-center">
+        <div className="flex flex-col items-center justify-center text-center p-4">
             <h1 className="text-4xl md:text-6xl font-headline text-destructive mb-8">Tic Tac Toe</h1>
             <Card className="p-4 md:p-6 bg-card/70 w-full max-w-sm">
                 <CardContent className="flex flex-col gap-6 pt-6">
@@ -238,7 +238,7 @@ const TicTacToeGame = ({ onBack }: { onBack: () => void }) => {
         </div>
       <h1 className="text-4xl md:text-5xl font-headline text-destructive mb-4">Tic Tac Toe</h1>
       
-      <div className={cn("text-xl md:text-2xl font-semibold mb-4 h-8", winner || isDraw ? 'text-green-400' : 'text-foreground')}>
+      <div className={cn("text-xl md:text-2xl font-semibold mb-4 h-8", winner || isdraw ? 'text-green-400' : 'text-foreground')}>
         {getStatusMessage()}
       </div>
 
